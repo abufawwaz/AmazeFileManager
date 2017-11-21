@@ -353,7 +353,7 @@ public class ZipExplorerFragment extends Fragment implements BottomBarButtonPath
         // in case of opening any unknown file inside the zip
 
         if (files.get(0).exists()) {
-            new DeleteTask(getActivity(), this).execute(files);
+            new DeleteTask(getActivity(), this, files).execute();
         }
     }
 

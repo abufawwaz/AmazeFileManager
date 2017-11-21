@@ -47,7 +47,7 @@ import com.cloudrail.si.interfaces.CloudStorage;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, String, Boolean> {
+public class DeleteTask extends AsyncTask<Void, String, Boolean> {
 
     private WeakReference<Context> context;
     private ArrayList<HybridFileParcelable> files;
@@ -55,13 +55,14 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
     private ZipExplorerFragment zipExplorerFragment;
     private DataUtils dataUtils = DataUtils.getInstance();
 
-    public DeleteTask(Context context) {
+    public DeleteTask(Context context, ArrayList<HybridFileParcelable> files) {
         this.context = new WeakReference<>(context);
+        this.files = files;
         rootMode = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("rootmode", false);
     }
 
-    public DeleteTask(Context context, ZipExplorerFragment zipExplorerFragment) {
-        this(context);
+    public DeleteTask(Context context, ZipExplorerFragment zipExplorerFragment, ArrayList<HybridFileParcelable> files) {
+        this(context, files);
         this.zipExplorerFragment = zipExplorerFragment;
     }
 
@@ -73,11 +74,10 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
         Toast.makeText(context, values[0], Toast.LENGTH_SHORT).show();
     }
 
-    protected Boolean doInBackground(ArrayList<HybridFileParcelable>... p1) {
+    protected Boolean doInBackground(Void p[]) {
         final Context context = this.context.get();
         if(context == null) return null;
 
-        files = p1[0];
         boolean b = true;
         if(files.size()==0)return true;
 
