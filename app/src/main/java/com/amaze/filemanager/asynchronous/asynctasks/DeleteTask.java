@@ -39,7 +39,6 @@ import com.amaze.filemanager.utils.OTGUtil;
 import com.amaze.filemanager.utils.OpenMode;
 import com.amaze.filemanager.utils.cloud.CloudUtil;
 import com.amaze.filemanager.utils.files.CryptUtil;
-import com.amaze.filemanager.utils.files.FileUtils;
 import com.cloudrail.si.interfaces.CloudStorage;
 
 import java.lang.ref.WeakReference;
@@ -79,67 +78,38 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
         } else if (files.get(0).isDropBoxFile()) {
             CloudStorage cloudStorageDropbox = dataUtils.getAccount(OpenMode.DROPBOX);
             for (HybridFileParcelable baseFile : files) {
-                try {
-                    cloudStorageDropbox.delete(CloudUtil.stripPath(OpenMode.DROPBOX, baseFile.getPath()));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    succeded = false;
-                    break;
-                }
+                cloudStorageDropbox.delete(CloudUtil.stripPath(OpenMode.DROPBOX, baseFile.getPath()));
             }
         } else if (files.get(0).isBoxFile()) {
             CloudStorage cloudStorageBox = dataUtils.getAccount(OpenMode.BOX);
             for (HybridFileParcelable baseFile : files) {
-                try {
-                    cloudStorageBox.delete(CloudUtil.stripPath(OpenMode.BOX, baseFile.getPath()));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    succeded = false;
-                    break;
-                }
+                cloudStorageBox.delete(CloudUtil.stripPath(OpenMode.BOX, baseFile.getPath()));
             }
         } else if (files.get(0).isGoogleDriveFile()) {
             CloudStorage cloudStorageGdrive = dataUtils.getAccount(OpenMode.GDRIVE);
             for (HybridFileParcelable baseFile : files) {
-                try {
-                    cloudStorageGdrive.delete(CloudUtil.stripPath(OpenMode.GDRIVE, baseFile.getPath()));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    succeded = false;
-                    break;
-                }
+                cloudStorageGdrive.delete(CloudUtil.stripPath(OpenMode.GDRIVE, baseFile.getPath()));
             }
         } else if (files.get(0).isOneDriveFile()) {
             CloudStorage cloudStorageOnedrive = dataUtils.getAccount(OpenMode.ONEDRIVE);
             for (HybridFileParcelable baseFile : files) {
-                try {
-                    cloudStorageOnedrive.delete(CloudUtil.stripPath(OpenMode.ONEDRIVE, baseFile.getPath()));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    succeded = false;
-                    break;
-                }
+                cloudStorageOnedrive.delete(CloudUtil.stripPath(OpenMode.ONEDRIVE, baseFile.getPath()));
             }
         } else {
-            for (HybridFileParcelable a : files)
+            for (HybridFileParcelable a : files) {
                 try {
                     (a).delete(context, rootMode);
                 } catch (RootNotPermittedException e) {
                     e.printStackTrace();
                     succeded = false;
                 }
+            }
         }
 
         // delete file from media database
         if (!files.get(0).isSmb()) {
-            try {
-                for (HybridFileParcelable f : files) {
-                    delete(context, f.getPath());
-                }
-            } catch (Exception e) {
-                for (HybridFileParcelable f : files) {
-                    FileUtils.scanFile(f.getPath(), context);
-                }
+            for (HybridFileParcelable f : files) {
+                delete(context, f.getPath());
             }
         }
 
