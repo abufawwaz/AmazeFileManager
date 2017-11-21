@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.provider.DocumentFile;
 import android.widget.Toast;
 
@@ -43,34 +44,40 @@ import com.amaze.filemanager.utils.files.FileUtils;
 import com.amaze.filemanager.utils.OpenMode;
 import com.cloudrail.si.interfaces.CloudStorage;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, String, Boolean> {
 
+    private WeakReference<Context> context;
     private ArrayList<HybridFileParcelable> files;
-    private Context cd;
     private boolean rootMode;
     private ZipExplorerFragment zipExplorerFragment;
     private DataUtils dataUtils = DataUtils.getInstance();
 
-    public DeleteTask(ContentResolver c, Context cd) {
-        this.cd = cd;
-        rootMode = PreferenceManager.getDefaultSharedPreferences(cd).getBoolean("rootmode", false);
+    public DeleteTask(ContentResolver c, Context context) {
+        this.context = new WeakReference<>(context);
+        rootMode = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("rootmode", false);
     }
 
-    public DeleteTask(ContentResolver c, Context cd, ZipExplorerFragment zipExplorerFragment) {
-        this.cd = cd;
-        rootMode = PreferenceManager.getDefaultSharedPreferences(cd).getBoolean("rootmode", false);
+    public DeleteTask(ContentResolver c, Context context, ZipExplorerFragment zipExplorerFragment) {
+        this.context = new WeakReference<>(context);
+        rootMode = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("rootmode", false);
         this.zipExplorerFragment = zipExplorerFragment;
     }
 
     @Override
     protected void onProgressUpdate(String... values) {
-        super.onProgressUpdate(values);
-        Toast.makeText(cd, values[0], Toast.LENGTH_SHORT).show();
+        final Context context = this.context.get();
+        if(context == null) return;
+
+        Toast.makeText(context, values[0], Toast.LENGTH_SHORT).show();
     }
 
     protected Boolean doInBackground(ArrayList<HybridFileParcelable>... p1) {
+        final Context context = this.context.get();
+        if(context == null) return null;
+
         files = p1[0];
         boolean b = true;
         if(files.size()==0)return true;
@@ -78,7 +85,7 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
         if (files.get(0).isOtgFile()) {
             for (HybridFileParcelable a : files) {
 
-                DocumentFile documentFile = OTGUtil.getDocumentFile(a.getPath(), cd, false);
+                DocumentFile documentFile = OTGUtil.getDocumentFile(a.getPath(), context, false);
                  b = documentFile.delete();
             }
         } else if (files.get(0).isDropBoxFile()) {
@@ -129,7 +136,7 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
 
             for(HybridFileParcelable a : files)
                 try {
-                    (a).delete(cd, rootMode);
+                    (a).delete(context, rootMode);
                 } catch (RootNotPermittedException e) {
                     e.printStackTrace();
                     b = false;
@@ -140,11 +147,11 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
         if(!files.get(0).isSmb()) {
             try {
                 for (HybridFileParcelable f : files) {
-                    delete(cd,f.getPath());
+                    delete(context,f.getPath());
                 }
             } catch (Exception e) {
                 for (HybridFileParcelable f : files) {
-                    FileUtils.scanFile(f.getPath(), cd);
+                    FileUtils.scanFile(f.getPath(), context);
                 }
             }
         }
@@ -152,7 +159,7 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
         // delete file entry from encrypted database
         for (HybridFileParcelable file : files) {
             if (file.getName().endsWith(CryptUtil.CRYPT_EXTENSION)) {
-                CryptHandler handler = new CryptHandler(cd);
+                CryptHandler handler = new CryptHandler(context);
                 handler.clear(file.getPath());
             }
         }
@@ -162,16 +169,18 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
 
     @Override
     public void onPostExecute(Boolean b) {
+        final Context context = this.context.get();
+        if(context == null) return;
 
         Intent intent = new Intent(MainActivity.KEY_INTENT_LOAD_LIST);
-        String path = files.get(0).getParent(cd);
+        String path = files.get(0).getParent(context);
         intent.putExtra(MainActivity.KEY_INTENT_LOAD_LIST_FILE, path);
-        cd.sendBroadcast(intent);
+        context.sendBroadcast(intent);
 
         if (!b) {
-            Toast.makeText(cd, cd.getResources().getString(R.string.error), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, context.getResources().getString(R.string.error), Toast.LENGTH_SHORT).show();
         } else if (zipExplorerFragment ==null) {
-            Toast.makeText(cd, cd.getResources().getString(R.string.done), Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, context.getResources().getString(R.string.done), Toast.LENGTH_SHORT).show();
         }
 
         if (zipExplorerFragment !=null) {
@@ -179,7 +188,7 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
         }
     }
 
-    private void delete(final Context context, final String file) {
+    private void delete(@NonNull final Context context, final String file) {
         final String where = MediaStore.MediaColumns.DATA + "=?";
         final String[] selectionArgs = new String[] {
                 file
