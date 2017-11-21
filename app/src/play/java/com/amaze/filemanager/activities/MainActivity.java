@@ -1713,7 +1713,7 @@ public class MainActivity extends ThemedActivity implements
             }
             switch (operation) {
                 case DataUtils.DELETE://deletion
-                    new DeleteTask(null, mainActivity).execute((oparrayList));
+                    new DeleteTask(mainActivity).execute((oparrayList));
                     break;
                 case DataUtils.COPY://copying
                     //legacy compatibility

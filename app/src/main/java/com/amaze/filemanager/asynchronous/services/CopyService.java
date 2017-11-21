@@ -344,7 +344,7 @@ public class CopyService extends Service {
                         if (!failedFOps.contains(a))
                             toDelete.add(a);
                     }
-                    new DeleteTask(getContentResolver(), c).execute((toDelete));
+                    new DeleteTask(c).execute((toDelete));
                 }
             }
 

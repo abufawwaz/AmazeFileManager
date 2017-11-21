@@ -55,14 +55,13 @@ public class DeleteTask extends AsyncTask<ArrayList<HybridFileParcelable>, Strin
     private ZipExplorerFragment zipExplorerFragment;
     private DataUtils dataUtils = DataUtils.getInstance();
 
-    public DeleteTask(ContentResolver c, Context context) {
+    public DeleteTask(Context context) {
         this.context = new WeakReference<>(context);
         rootMode = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("rootmode", false);
     }
 
-    public DeleteTask(ContentResolver c, Context context, ZipExplorerFragment zipExplorerFragment) {
-        this.context = new WeakReference<>(context);
-        rootMode = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("rootmode", false);
+    public DeleteTask(Context context, ZipExplorerFragment zipExplorerFragment) {
+        this(context);
         this.zipExplorerFragment = zipExplorerFragment;
     }
 

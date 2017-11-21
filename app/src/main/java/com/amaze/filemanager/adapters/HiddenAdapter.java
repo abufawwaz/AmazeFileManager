@@ -94,7 +94,7 @@ public class HiddenAdapter extends RecyclerView.Adapter<HiddenAdapter.ViewHolder
                     HybridFileParcelable baseFile = new HybridFileParcelable(items.get(position).getPath() + "/.nomedia");
                     baseFile.setMode(OpenMode.FILE);
                     a1.add(baseFile);
-                    new DeleteTask(context.getActivity().getContentResolver(), c).execute((a1));
+                    new DeleteTask(c).execute((a1));
                 }
                 dataUtils.removeHiddenFile(items.get(position).getPath());
                 items.remove(items.get(position));

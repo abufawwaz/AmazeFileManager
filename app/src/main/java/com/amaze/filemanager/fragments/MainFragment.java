@@ -1574,7 +1574,7 @@ public class MainFragment extends android.support.v4.app.Fragment implements Bot
                 // we've opened the file and are ready to delete it
                 ArrayList<HybridFileParcelable> baseFiles = new ArrayList<>();
                 baseFiles.add(encryptBaseFile);
-                new DeleteTask(getMainActivity().getContentResolver(), getActivity()).execute(baseFiles);
+                new DeleteTask(getActivity()).execute(baseFiles);
             }
         }
     }

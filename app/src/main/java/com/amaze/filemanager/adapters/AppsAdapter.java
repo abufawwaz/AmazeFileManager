@@ -213,7 +213,7 @@ public class AppsAdapter extends ArrayAdapter<LayoutElementParcelable> {
                                                 } else {
                                                     files.add(f1);
                                                 }
-                                                new DeleteTask(app.getActivity().getContentResolver(), app.getActivity()).execute((files));
+                                                new DeleteTask(app.getActivity()).execute((files));
                                             }
                                         }).build().show();
                             } else {
