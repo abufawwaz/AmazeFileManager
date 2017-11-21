@@ -19,10 +19,8 @@
 
 package com.amaze.filemanager.asynchronous.asynctasks;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -38,10 +36,10 @@ import com.amaze.filemanager.filesystem.HybridFileParcelable;
 import com.amaze.filemanager.fragments.ZipExplorerFragment;
 import com.amaze.filemanager.utils.DataUtils;
 import com.amaze.filemanager.utils.OTGUtil;
+import com.amaze.filemanager.utils.OpenMode;
 import com.amaze.filemanager.utils.cloud.CloudUtil;
 import com.amaze.filemanager.utils.files.CryptUtil;
 import com.amaze.filemanager.utils.files.FileUtils;
-import com.amaze.filemanager.utils.OpenMode;
 import com.cloudrail.si.interfaces.CloudStorage;
 
 import java.lang.ref.WeakReference;
@@ -66,26 +64,17 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
         this.zipExplorerFragment = zipExplorerFragment;
     }
 
-    @Override
-    protected void onProgressUpdate(String... values) {
-        final Context context = this.context.get();
-        if(context == null) return;
-
-        Toast.makeText(context, values[0], Toast.LENGTH_SHORT).show();
-    }
-
     protected Boolean doInBackground(Void p[]) {
         final Context context = this.context.get();
-        if(context == null) return null;
+        if (context == null) return null;
 
-        boolean b = true;
-        if(files.size()==0)return true;
+        boolean succeded = true;
+        if (files.size() == 0) return true;
 
         if (files.get(0).isOtgFile()) {
             for (HybridFileParcelable a : files) {
-
                 DocumentFile documentFile = OTGUtil.getDocumentFile(a.getPath(), context, false);
-                 b = documentFile.delete();
+                succeded = documentFile.delete();
             }
         } else if (files.get(0).isDropBoxFile()) {
             CloudStorage cloudStorageDropbox = dataUtils.getAccount(OpenMode.DROPBOX);
@@ -94,7 +83,7 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
                     cloudStorageDropbox.delete(CloudUtil.stripPath(OpenMode.DROPBOX, baseFile.getPath()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    b = false;
+                    succeded = false;
                     break;
                 }
             }
@@ -105,7 +94,7 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
                     cloudStorageBox.delete(CloudUtil.stripPath(OpenMode.BOX, baseFile.getPath()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    b = false;
+                    succeded = false;
                     break;
                 }
             }
@@ -116,7 +105,7 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
                     cloudStorageGdrive.delete(CloudUtil.stripPath(OpenMode.GDRIVE, baseFile.getPath()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    b = false;
+                    succeded = false;
                     break;
                 }
             }
@@ -127,26 +116,25 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
                     cloudStorageOnedrive.delete(CloudUtil.stripPath(OpenMode.ONEDRIVE, baseFile.getPath()));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    b = false;
+                    succeded = false;
                     break;
                 }
             }
         } else {
-
-            for(HybridFileParcelable a : files)
+            for (HybridFileParcelable a : files)
                 try {
                     (a).delete(context, rootMode);
                 } catch (RootNotPermittedException e) {
                     e.printStackTrace();
-                    b = false;
+                    succeded = false;
                 }
         }
 
         // delete file from media database
-        if(!files.get(0).isSmb()) {
+        if (!files.get(0).isSmb()) {
             try {
                 for (HybridFileParcelable f : files) {
-                    delete(context,f.getPath());
+                    delete(context, f.getPath());
                 }
             } catch (Exception e) {
                 for (HybridFileParcelable f : files) {
@@ -163,11 +151,19 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
             }
         }
 
-        return b;
+        return succeded;
     }
 
     @Override
-    public void onPostExecute(Boolean b) {
+    protected void onProgressUpdate(String... values) {
+        final Context context = this.context.get();
+        if(context == null) return;
+
+        Toast.makeText(context, values[0], Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onPostExecute(Boolean succeded) {
         final Context context = this.context.get();
         if(context == null) return;
 
@@ -176,7 +172,7 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
         intent.putExtra(MainActivity.KEY_INTENT_LOAD_LIST_FILE, path);
         context.sendBroadcast(intent);
 
-        if (!b) {
+        if (!succeded) {
             Toast.makeText(context, context.getResources().getString(R.string.error), Toast.LENGTH_SHORT).show();
         } else if (zipExplorerFragment ==null) {
             Toast.makeText(context, context.getResources().getString(R.string.done), Toast.LENGTH_SHORT).show();
@@ -188,14 +184,9 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
     }
 
     private void delete(@NonNull final Context context, final String file) {
-        final String where = MediaStore.MediaColumns.DATA + "=?";
-        final String[] selectionArgs = new String[] {
-                file
-        };
-        final ContentResolver contentResolver = context.getContentResolver();
-        final Uri filesUri = MediaStore.Files.getContentUri("external");
         // Delete the entry from the media database. This will actually delete media files.
-        contentResolver.delete(filesUri, where, selectionArgs);
+        context.getContentResolver().delete(MediaStore.Files.getContentUri("external"),
+                MediaStore.MediaColumns.DATA + "=?",  new String[] {file});
     }
 }
 
