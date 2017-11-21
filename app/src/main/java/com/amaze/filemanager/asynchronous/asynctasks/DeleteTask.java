@@ -70,54 +70,36 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
         boolean succeded = true;
         if (files.size() == 0) return true;
 
-        if (files.get(0).isOtgFile()) {
-            for (HybridFileParcelable a : files) {
-                DocumentFile documentFile = OTGUtil.getDocumentFile(a.getPath(), context, false);
+        for (HybridFileParcelable baseFile : files) {
+            if (baseFile.isOtgFile()) {
+                DocumentFile documentFile = OTGUtil.getDocumentFile(baseFile.getPath(), context, false);
                 succeded = documentFile.delete();
-            }
-        } else if (files.get(0).isDropBoxFile()) {
-            CloudStorage cloudStorageDropbox = dataUtils.getAccount(OpenMode.DROPBOX);
-            for (HybridFileParcelable baseFile : files) {
-                cloudStorageDropbox.delete(CloudUtil.stripPath(OpenMode.DROPBOX, baseFile.getPath()));
-            }
-        } else if (files.get(0).isBoxFile()) {
-            CloudStorage cloudStorageBox = dataUtils.getAccount(OpenMode.BOX);
-            for (HybridFileParcelable baseFile : files) {
-                cloudStorageBox.delete(CloudUtil.stripPath(OpenMode.BOX, baseFile.getPath()));
-            }
-        } else if (files.get(0).isGoogleDriveFile()) {
-            CloudStorage cloudStorageGdrive = dataUtils.getAccount(OpenMode.GDRIVE);
-            for (HybridFileParcelable baseFile : files) {
-                cloudStorageGdrive.delete(CloudUtil.stripPath(OpenMode.GDRIVE, baseFile.getPath()));
-            }
-        } else if (files.get(0).isOneDriveFile()) {
-            CloudStorage cloudStorageOnedrive = dataUtils.getAccount(OpenMode.ONEDRIVE);
-            for (HybridFileParcelable baseFile : files) {
-                cloudStorageOnedrive.delete(CloudUtil.stripPath(OpenMode.ONEDRIVE, baseFile.getPath()));
-            }
-        } else {
-            for (HybridFileParcelable a : files) {
+            } else if (baseFile.isDropBoxFile()) {
+                deleteCloud(OpenMode.DROPBOX, baseFile);
+            } else if (baseFile.isBoxFile()) {
+                deleteCloud(OpenMode.BOX, baseFile);
+            } else if (baseFile.isGoogleDriveFile()) {
+                deleteCloud(OpenMode.GDRIVE, baseFile);
+            } else if (baseFile.isOneDriveFile()) {
+                deleteCloud(OpenMode.ONEDRIVE, baseFile);
+            } else {
                 try {
-                    (a).delete(context, rootMode);
+                    baseFile.delete(context, rootMode);
                 } catch (RootNotPermittedException e) {
                     e.printStackTrace();
                     succeded = false;
                 }
             }
-        }
 
-        // delete file from media database
-        if (!files.get(0).isSmb()) {
-            for (HybridFileParcelable f : files) {
-                delete(context, f.getPath());
+            // delete file from media database
+            if (!baseFile.isSmb()) {
+                delete(context, baseFile.getPath());
             }
-        }
 
-        // delete file entry from encrypted database
-        for (HybridFileParcelable file : files) {
-            if (file.getName().endsWith(CryptUtil.CRYPT_EXTENSION)) {
+            // delete file entry from encrypted database
+            if (baseFile.getName().endsWith(CryptUtil.CRYPT_EXTENSION)) {
                 CryptHandler handler = new CryptHandler(context);
-                handler.clear(file.getPath());
+                handler.clear(baseFile.getPath());
             }
         }
 
@@ -157,6 +139,12 @@ public class DeleteTask extends AsyncTask<Void, String, Boolean> {
         // Delete the entry from the media database. This will actually delete media files.
         context.getContentResolver().delete(MediaStore.Files.getContentUri("external"),
                 MediaStore.MediaColumns.DATA + "=?",  new String[] {file});
+    }
+
+    private void deleteCloud(OpenMode util, HybridFileParcelable baseFile) {
+        CloudStorage cloudStorageOnedrive = dataUtils.getAccount(util);
+        cloudStorageOnedrive.delete(CloudUtil.stripPath(util, baseFile.getPath()));
+
     }
 }
 
