@@ -27,6 +27,12 @@ android {
         versionName "3.2.1"
 
         vectorDrawables.useSupportLibrary = true;
+
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_TOOLCHAIN=clang'
+            }
+        }
     }
 
     signingConfigs {
@@ -72,6 +78,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    externalNativeBuild.cmake.path = "src/main/jni/CMakeLists.txt"
 }
 
 dependencies {
