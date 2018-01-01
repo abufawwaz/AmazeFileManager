@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +40,10 @@ import com.amaze.filemanager.utils.files.CryptUtil;
 import com.amaze.filemanager.utils.provider.UtilitiesProviderInterface;
 import com.amaze.filemanager.utils.theme.AppTheme;
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -418,14 +424,14 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder vholder, int p) {
-        if(vholder instanceof ItemViewHolder) {
+        if (vholder instanceof ItemViewHolder) {
             final ItemViewHolder holder = (ItemViewHolder) vholder;
             final boolean isBackButton = mainFrag.GO_BACK_ITEM && p == 0;
 
             if (mainFrag.IS_LIST) {
                 if (p == getItemCount() - 1) {
                     holder.rl.setMinimumHeight((int) minRowHeight);
-                    if (itemsDigested.size() == (mainFrag.GO_BACK_ITEM ? 1 : 0))
+                    if (itemsDigested.size() == (mainFrag.GO_BACK_ITEM? 1:0))
                         holder.txtTitle.setText(R.string.nofiles);
                     else holder.txtTitle.setText("");
                     return;
@@ -503,24 +509,21 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                     case Icons.VIDEO:
                         if (mainFrag.SHOW_THUMBS) {
                             if (mainFrag.CIRCULAR_IMAGES) {
-                                holder.pictureIcon.setVisibility(View.VISIBLE);
-                                modelProvider.getPreloadRequestBuilder(rowItem.iconData).into(holder.pictureIcon);
+                                showThumbnailWithBackground(holder, rowItem.iconData, holder.pictureIcon);
                             } else {
-                                holder.apkIcon.setVisibility(View.VISIBLE);
-                                modelProvider.getPreloadRequestBuilder(rowItem.iconData).into(holder.apkIcon);
+                                showThumbnailWithBackground(holder, rowItem.iconData, holder.apkIcon);
                             }
                         }
                         break;
                     case Icons.APK:
                         if (mainFrag.SHOW_THUMBS) {
-                            holder.apkIcon.setVisibility(View.VISIBLE);
-                            modelProvider.getPreloadRequestBuilder(rowItem.iconData).into(holder.apkIcon);
+                            showThumbnailWithBackground(holder, rowItem.iconData, holder.apkIcon);
                         }
                         break;
                     case Icons.NOT_KNOWN:
                         holder.genericIcon.setVisibility(View.VISIBLE);
                         // if the file type is any unknown variable
-                        String ext = !rowItem.isDirectory ? MimeTypes.getExtension(rowItem.title) : null;
+                        String ext = !rowItem.isDirectory? MimeTypes.getExtension(rowItem.title):null;
                         if (ext != null && ext.trim().length() != 0) {
                             holder.genericText.setText(ext);
                             holder.genericIcon.setImageDrawable(null);
@@ -610,19 +613,17 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 holder.genericIcon.setVisibility(View.VISIBLE);
                 holder.checkImageViewGrid.setVisibility(View.INVISIBLE);
 
+                ((RoundedImageView) holder.genericIcon).setRelativeSize(1.25f, 1.25f);
                 GlideApp.with(mainFrag).load(rowItem.iconData.image).into(holder.genericIcon);
 
                 if (rowItem.filetype == Icons.IMAGE || rowItem.filetype == Icons.VIDEO) {
-                    holder.genericIcon.setColorFilter(null);
                     holder.imageView1.setVisibility(View.VISIBLE);
                     holder.imageView1.setImageDrawable(null);
                     if (utilsProvider.getAppTheme().equals(AppTheme.DARK) || utilsProvider.getAppTheme().equals(AppTheme.BLACK))
                         holder.imageView1.setBackgroundColor(Color.BLACK);
-                    modelProvider.getPreloadRequestBuilder(rowItem.iconData).into(holder.imageView1);
+                    showRoundedThumbnail(holder, rowItem.iconData, holder.imageView1);
                 } else if (rowItem.filetype == Icons.APK) {
-                    modelProvider.getPreloadRequestBuilder(rowItem.iconData).into(holder.genericIcon);
-                } else {
-                    ((RoundedImageView) holder.genericIcon).setRelativeSize(1.25f, 1.25f);
+                    showRoundedThumbnail(holder, rowItem.iconData, holder.genericIcon);
                 }
 
                 if(holder.genericIcon.getVisibility() == View.VISIBLE) {
@@ -655,7 +656,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                                 break;
                             case Icons.APK:
                             case Icons.IMAGE:
-                                iconBackground.setBackgroundColor(Color.TRANSPARENT);
+                                //While these are loading or if they fail, color has to be set (done in showRoundedThumbnail()).
                                 break;
                             default:
                                 iconBackground.setBackgroundColor(iconSkinColor);
@@ -663,16 +664,19 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                         }
                     }
 
-                    if (isBackButton)
+                    if (isBackButton) {
                         iconBackground.setBackgroundColor(goBackColor);
+                    }
                 }
 
+
+
                 if (itemsDigested.get(p).getChecked() == ListItem.CHECKED) {
-                    if(holder.genericIcon.getVisibility() == View.VISIBLE) {
+                    if (holder.genericIcon.getVisibility() == View.VISIBLE) {
                         View iconBackground = mainFrag.CIRCULAR_IMAGES? holder.genericIcon:holder.iconLayout;
 
                         iconBackground.setBackgroundColor(iconSkinColor);
-                        //iconBackground.setImageDrawable(main.getResources().getDrawable(R.drawable.abc_ic_cab_done_holo_dark));
+                        //holder.genericIcon.setImageDrawable(main.getResources().getDrawable(R.drawable.abc_ic_cab_done_holo_dark));
                     }
 
                     holder.checkImageViewGrid.setVisibility(View.VISIBLE);
@@ -731,6 +735,59 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
                 return VIEW_GENERIC;
             }
         }
+    }
+
+    private void showThumbnailWithBackground(ItemViewHolder viewHolder, IconDataParcelable iconData,
+                                             ImageView view) {
+        viewHolder.genericIcon.setVisibility(View.VISIBLE);
+        GlideApp.with(mainFrag).load(iconData.loadingImage).into(viewHolder.genericIcon);
+        GradientDrawable gradientDrawable = (GradientDrawable) viewHolder.genericIcon.getBackground();
+        gradientDrawable.setColor(iconSkinColor);
+
+        modelProvider.getPreloadRequestBuilder(iconData).listener(new RequestListener<Drawable>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
+                GlideApp.with(mainFrag).load(R.drawable.ic_broken_image_white_24dp).into(viewHolder.genericIcon);
+                return true;
+            }
+
+            @Override
+            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target,
+                                           DataSource dataSource, boolean isFirstResource) {
+                viewHolder.genericIcon.setImageDrawable(null);
+                viewHolder.genericIcon.setVisibility(View.GONE);
+                view.setVisibility(View.VISIBLE);
+                return false;
+            }
+        }).into(view);
+    }
+
+    private void showRoundedThumbnail(ItemViewHolder viewHolder, IconDataParcelable iconData,
+                                      ImageView view) {
+        View iconBackground = mainFrag.CIRCULAR_IMAGES? viewHolder.genericIcon:viewHolder.iconLayout;
+
+        iconBackground.setBackgroundColor(iconSkinColor);
+        viewHolder.genericIcon.setVisibility(View.VISIBLE);
+        GlideApp.with(mainFrag).load(iconData.loadingImage).into(viewHolder.genericIcon);
+        view.setVisibility(View.INVISIBLE);
+
+        modelProvider.getPreloadRequestBuilder(iconData).listener(new RequestListener<Drawable>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target target, boolean isFirstResource) {
+                iconBackground.setBackgroundColor(iconSkinColor);
+                GlideApp.with(mainFrag).load(R.drawable.ic_broken_image_white_24dp).into(viewHolder.genericIcon);
+                return true;
+            }
+
+            @Override
+            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target,
+                                           DataSource dataSource, boolean isFirstResource) {
+                viewHolder.genericIcon.setImageDrawable(null);
+                viewHolder.genericIcon.setVisibility(View.GONE);
+                view.setVisibility(View.VISIBLE);
+                return false;
+            }
+        }).into(view);
     }
 
     private void showPopup(View v, final LayoutElementParcelable rowItem, final int position) {

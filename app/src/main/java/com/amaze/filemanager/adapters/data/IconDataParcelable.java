@@ -17,19 +17,22 @@ public class IconDataParcelable implements Parcelable {
     public final int type;
     public final String path;
     public final @DrawableRes int image;
+    public final @DrawableRes int loadingImage;
 
     public IconDataParcelable(int type, @DrawableRes int img) {
         if(type == IMAGE_FROMFILE) throw new IllegalArgumentException();
         this.type = type;
         this.image = img;
+        this.loadingImage = -1;
         this.path = null;
     }
 
-    public IconDataParcelable(int type, String path, @DrawableRes int img) {
+    public IconDataParcelable(int type, String path, @DrawableRes int loadingImages) {
         if(type == IMAGE_RES) throw new IllegalArgumentException();
         this.type = type;
         this.path = path;
-        this.image = img;
+        this.loadingImage = loadingImages;
+        this.image = -1;
     }
 
     @Override
@@ -42,12 +45,14 @@ public class IconDataParcelable implements Parcelable {
         parcel.writeInt(type);
         parcel.writeString(path);
         parcel.writeInt(image);
+        parcel.writeInt(loadingImage);
     }
 
     public IconDataParcelable(Parcel im) {
         type = im.readInt();
         path = im.readString();
         image = im.readInt();
+        loadingImage = im.readInt();
     }
 
     public static final Parcelable.Creator<IconDataParcelable> CREATOR =
