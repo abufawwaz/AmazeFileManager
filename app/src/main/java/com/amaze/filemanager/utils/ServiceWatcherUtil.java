@@ -75,7 +75,7 @@ public class ServiceWatcherUtil {
                     return;
                 }
 
-                if (POSITION == progressHandler.getWrittenSize() && ++HALT_COUNTER < 5) {
+                if (POSITION == progressHandler.getWrittenSize() && !service.isHalted()) {
                     // we waited 5 secs for progress to start again
                     if (service instanceof EncryptService) {
                         // we suspect the progress has been haulted for some reason, stop the watcher
@@ -88,9 +88,8 @@ public class ServiceWatcherUtil {
                         handlerThread.quit();
                     }
 
-                    HALT_COUNTER = 0;
                     service.halt();
-                } else if(service.isHalted()) {
+                } else if(POSITION != progressHandler.getWrittenSize() && service.isHalted()) {
                     service.resume();
                 }
 
