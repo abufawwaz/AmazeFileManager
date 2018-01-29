@@ -75,7 +75,8 @@ public class ServiceWatcherUtil {
                     return;
                 }
 
-                if (POSITION == progressHandler.getWrittenSize() && !service.isHalted()) {
+                if (POSITION == progressHandler.getWrittenSize()
+                        && (!service.isHalted() && ++HALT_COUNTER > 5)) {
                     // we waited 5 secs for progress to start again
                     if (service instanceof EncryptService) {
                         // we suspect the progress has been haulted for some reason, stop the watcher
@@ -88,9 +89,17 @@ public class ServiceWatcherUtil {
                         handlerThread.quit();
                     }
 
+                    HALT_COUNTER = 0;
                     service.halt();
-                } else if(POSITION != progressHandler.getWrittenSize() && service.isHalted()) {
-                    service.resume();
+                } else if(POSITION != progressHandler.getWrittenSize()) {
+                    if(service.isHalted()) {
+                        service.resume();
+                    } else {
+                        // reset the halt counter everytime there is a progress
+                        // so that it increments only when
+                        // progress was halted for consecutive time period
+                        HALT_COUNTER = 0;
+                    }
                 }
 
                 handler.postDelayed(this, 1000);
