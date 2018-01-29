@@ -35,7 +35,7 @@ public class ServiceWatcherUtil {
     // position of byte in total byte size to be copied
     public static long POSITION = 0L;
 
-    private static int HAULT_COUNTER = -1;
+    private static int HALT_COUNTER = -1;
 
     /**
      *
@@ -46,7 +46,7 @@ public class ServiceWatcherUtil {
         this.progressHandler = progressHandler;
         this.totalSize = totalSize;
         POSITION = 0L;
-        HAULT_COUNTER = -1;
+        HALT_COUNTER = -1;
 
         handlerThread = new HandlerThread("service_progress_watcher");
         handlerThread.start();
@@ -75,7 +75,7 @@ public class ServiceWatcherUtil {
                     return;
                 }
 
-                if (POSITION == progressHandler.getWrittenSize() && ++HAULT_COUNTER < 5) {
+                if (POSITION == progressHandler.getWrittenSize() && ++HALT_COUNTER < 5) {
                     // we waited 5 secs for progress to start again
                     if (service instanceof EncryptService) {
                         // we suspect the progress has been haulted for some reason, stop the watcher
@@ -88,7 +88,7 @@ public class ServiceWatcherUtil {
                         handlerThread.quit();
                     }
 
-                    HAULT_COUNTER = 0;
+                    HALT_COUNTER = 0;
                     service.halt();
                 } else if(service.isHalted()) {
                     service.resume();
