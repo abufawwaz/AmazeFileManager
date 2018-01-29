@@ -86,6 +86,16 @@ public class DecryptService extends ProgressiveService {
         return START_STICKY;
     }
 
+    @Override
+    protected void progressHalted() {
+        notificationBuilder.setProgress(0, 0, true);
+    }
+
+    @Override
+    protected void progressResumed() {
+        notificationBuilder.setProgress(0, 0, false);
+    }
+
     class BackgroundTask extends AsyncTask<Void, Void, Void> {
 
         @Override
@@ -104,7 +114,7 @@ public class DecryptService extends ProgressiveService {
             addFirstDatapoint(baseFile.getName(), 1, totalSize, false);// we're using encrypt as move flag false
 
             if (FileUtil.checkFolder(baseFileFolder, context) == 1) {
-                serviceWatcherUtil.watch();
+                serviceWatcherUtil.watch(DecryptService.this);
 
                 // we're here to decrypt, we'll decrypt at a custom path.
                 // the path is to the same directory as in encrypted one in normal case

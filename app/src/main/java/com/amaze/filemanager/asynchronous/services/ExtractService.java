@@ -120,6 +120,16 @@ public class ExtractService extends ProgressiveService {
     }
 
     @Override
+    protected void progressHalted() {
+        mBuilder.setProgress(0, 0, true);
+    }
+
+    @Override
+    protected void progressResumed() {
+        mBuilder.setProgress(0, 0, false);
+    }
+
+    @Override
     public void onDestroy() {
         unregisterReceiver(receiver1);
     }
@@ -156,6 +166,7 @@ public class ExtractService extends ProgressiveService {
             addDatapoint(intent);
         } else mNotifyManager.cancel(NotificationConstants.EXTRACT_ID);
     }
+
 
     public static class DoWork extends AsyncTask<Void, Void, Void> {
 
@@ -348,7 +359,7 @@ public class ExtractService extends ProgressiveService {
             extractService.addFirstDatapoint(entry1.get(0).getName(), entryNamesList.length, totalBytes, false);
 
             watcherUtil = new ServiceWatcherUtil(progressHandler, totalBytes);
-            watcherUtil.watch();
+            watcherUtil.watch(extractService);
 
             int i = 0;
             for (ZipEntry entry : entry1) {
@@ -382,7 +393,7 @@ public class ExtractService extends ProgressiveService {
             extractService.addFirstDatapoint(arrayList.get(0).getName(), 1, totalBytes, false);
 
             watcherUtil = new ServiceWatcherUtil(progressHandler, totalBytes);
-            watcherUtil.watch();
+            watcherUtil.watch(extractService);
 
             for (ZipEntry entry : arrayList) {
                 if (!progressHandler.getCancelled()) {
@@ -416,7 +427,7 @@ public class ExtractService extends ProgressiveService {
             extractService.addFirstDatapoint(archiveEntries.get(0).getName(), 1, totalBytes, false);
 
             watcherUtil = new ServiceWatcherUtil(progressHandler, totalBytes);
-            watcherUtil.watch();
+            watcherUtil.watch(extractService);
 
             inputStream = createTarInputStream(archive);
 
@@ -464,7 +475,7 @@ public class ExtractService extends ProgressiveService {
             extractService.addFirstDatapoint(arrayList.get(0).getFileNameString(), 1, totalBytes, false);
 
             watcherUtil = new ServiceWatcherUtil(progressHandler, totalBytes);
-            watcherUtil.watch();
+            watcherUtil.watch(extractService);
 
             for (FileHeader header : arrayList) {
 
@@ -504,7 +515,7 @@ public class ExtractService extends ProgressiveService {
             extractService.addFirstDatapoint(arrayList.get(0).getFileNameString(), arrayList.size(), totalBytes, false);
 
             watcherUtil = new ServiceWatcherUtil(progressHandler, totalBytes);
-            watcherUtil.watch();
+            watcherUtil.watch(extractService);
 
             int i = 0;
             for (FileHeader entry : arrayList) {

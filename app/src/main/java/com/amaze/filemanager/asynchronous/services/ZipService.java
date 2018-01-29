@@ -118,6 +118,16 @@ public class ZipService extends ProgressiveService {
         return START_STICKY;
     }
 
+    @Override
+    protected void progressHalted() {
+        mBuilder.setProgress(0, 0, true);
+    }
+
+    @Override
+    protected void progressResumed() {
+        mBuilder.setProgress(0, 0, false);
+    }
+
     public class DoWork extends AsyncTask<Bundle, Void, Void> {
 
         ZipOutputStream zos;
@@ -169,7 +179,7 @@ public class ZipService extends ProgressiveService {
             OutputStream out;
             File zipDirectory = new File(zipPath);
             watcherUtil = new ServiceWatcherUtil(progressHandler, totalBytes);
-            watcherUtil.watch();
+            watcherUtil.watch(ZipService.this);
 
             try {
                 out = FileUtil.getOutputStream(zipDirectory, c, totalBytes);

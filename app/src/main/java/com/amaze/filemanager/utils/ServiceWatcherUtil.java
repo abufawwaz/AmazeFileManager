@@ -16,6 +16,8 @@ import android.os.HandlerThread;
 import android.support.v4.app.NotificationCompat;
 
 import com.amaze.filemanager.R;
+import com.amaze.filemanager.asynchronous.services.EncryptService;
+import com.amaze.filemanager.asynchronous.services.ProgressiveService;
 import com.amaze.filemanager.ui.notifications.NotificationConstants;
 
 import java.util.ArrayList;
@@ -55,7 +57,7 @@ public class ServiceWatcherUtil {
      * Watches over the service progress without interrupting the worker thread in respective services
      * Method frees up all the resources and handlers after operation completes.
      */
-    public void watch() {
+    public void watch(ProgressiveService service) {
         runnable = new Runnable() {
             @Override
             public void run() {
@@ -73,10 +75,9 @@ public class ServiceWatcherUtil {
                     return;
                 }
 
-                if (POSITION == progressHandler.getWrittenSize()) {
-                    HAULT_COUNTER++;
-
-                    if (HAULT_COUNTER>10) {
+                if (POSITION == progressHandler.getWrittenSize() && ++HAULT_COUNTER < 5) {
+                    // we waited 5 secs for progress to start again
+                    if (service instanceof EncryptService) {
                         // we suspect the progress has been haulted for some reason, stop the watcher
 
                         // workaround for decryption when we have a length retreived by
@@ -85,9 +86,14 @@ public class ServiceWatcherUtil {
                         progressHandler.addWrittenLength(totalSize);
                         handler.removeCallbacks(this);
                         handlerThread.quit();
-                        return;
                     }
+
+                    HAULT_COUNTER = 0;
+                    service.halt();
+                } else if(service.isHalted()) {
+                    service.resume();
                 }
+
                 handler.postDelayed(this, 1000);
             }
         };
@@ -137,6 +143,7 @@ public class ServiceWatcherUtil {
         }*/
 
         if (pendingIntents.size()==0) {
+            pendingIntents.add(intent);
             init(context);
         }
         pendingIntents.add(intent);

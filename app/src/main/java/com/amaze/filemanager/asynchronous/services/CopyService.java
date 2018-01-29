@@ -128,6 +128,16 @@ public class CopyService extends ProgressiveService {
         return START_STICKY;
     }
 
+    @Override
+    protected void progressHalted() {
+        mBuilder.setProgress(0, 0, true);
+    }
+
+    @Override
+    protected void progressResumed() {
+        mBuilder.setProgress(0, 0, false);
+    }
+
     public void onDestroy() {
         this.unregisterReceiver(receiver3);
     }
@@ -257,7 +267,7 @@ public class CopyService extends ProgressiveService {
                                 final boolean move, OpenMode mode) {
 
                 // initial start of copy, initiate the watcher
-                watcherUtil.watch();
+                watcherUtil.watch(CopyService.this);
 
                 if (FileUtil.checkFolder((targetPath), c) == 1) {
                     for (int i = 0; i < sourceFiles.size(); i++) {

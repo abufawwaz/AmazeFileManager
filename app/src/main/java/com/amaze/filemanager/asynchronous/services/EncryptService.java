@@ -87,6 +87,16 @@ public class EncryptService extends ProgressiveService {
         return START_STICKY;
     }
 
+    @Override
+    protected void progressHalted() {
+        notificationBuilder.setProgress(0, 0, true);
+    }
+
+    @Override
+    protected void progressResumed() {
+        notificationBuilder.setProgress(0, 0, false);
+    }
+
     class BackgroundTask extends AsyncTask<Void, Void, Void> {
 
         @Override
@@ -102,7 +112,7 @@ public class EncryptService extends ProgressiveService {
             addFirstDatapoint(baseFile.getName(), 1, totalSize, true);// we're using encrypt as move flag false
 
             if (FileUtil.checkFolder(baseFile.getPath(), context) == 1) {
-                serviceWatcherUtil.watch();
+                serviceWatcherUtil.watch(EncryptService.this);
 
                 // we're here to encrypt
                 try {

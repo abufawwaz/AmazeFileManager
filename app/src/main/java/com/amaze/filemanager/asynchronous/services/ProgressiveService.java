@@ -15,6 +15,9 @@ import java.util.ArrayList;
  */
 
 public abstract class ProgressiveService extends Service {
+    public static final int STATE_HALTED = -1, STATE_RUNNING = 0;
+
+    private int currentState = STATE_RUNNING;
     // list of data packages which contains progress
     private ArrayList<DatapointParcelable> dataPackages = new ArrayList<>();
     private EncryptService.ProgressListener progressListener;
@@ -25,6 +28,22 @@ public abstract class ProgressiveService extends Service {
 
     public final ProgressListener getProgressListener() {
         return progressListener;
+    }
+
+    public synchronized boolean isHalted() {
+        return currentState == STATE_HALTED;
+    }
+
+    public synchronized void halt() {
+        if(currentState == STATE_HALTED) return;
+        currentState = STATE_HALTED;
+        progressHalted();
+    }
+
+    public synchronized void resume() {
+        if(currentState == STATE_RUNNING) return;
+        currentState = STATE_RUNNING;
+        progressResumed();
     }
 
     protected void addFirstDatapoint(String name, int amountOfFiles, long totalBytes, boolean move) {
@@ -43,6 +62,10 @@ public abstract class ProgressiveService extends Service {
             if (datapoint.completed) getProgressListener().refresh();
         }
     }
+
+    protected abstract void progressHalted();
+
+    protected abstract void progressResumed();
 
     /**
      * Returns the {@link #dataPackages} list which contains
