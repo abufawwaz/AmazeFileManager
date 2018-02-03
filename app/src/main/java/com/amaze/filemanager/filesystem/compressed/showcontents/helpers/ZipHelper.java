@@ -1,12 +1,12 @@
-package com.amaze.filemanager.filesystem.compressed.helpers;
+package com.amaze.filemanager.filesystem.compressed.showcontents.helpers;
 
 import android.content.Context;
 
 import com.amaze.filemanager.adapters.data.CompressedObjectParcelable;
 import com.amaze.filemanager.asynchronous.asynctasks.compress.ZipHelperTask;
-import java.util.ArrayList;
-
 import com.amaze.filemanager.filesystem.compressed.showcontents.Decompressor;
+
+import java.util.ArrayList;
 import com.amaze.filemanager.utils.OnAsyncTaskFinished;
 
 /**
@@ -14,9 +14,9 @@ import com.amaze.filemanager.utils.OnAsyncTaskFinished;
  *         on 20/11/2017, at 17:19.
  */
 
-public class ZipDecompressor extends Decompressor {
+public class ZipHelper extends Decompressor {
 
-    public ZipDecompressor(Context context) {
+    public ZipHelper(Context context) {
         super(context);
     }
 

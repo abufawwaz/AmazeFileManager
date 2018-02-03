@@ -36,6 +36,8 @@ import android.util.Log;
 import com.amaze.filemanager.R;
 import com.amaze.filemanager.activities.MainActivity;
 import com.amaze.filemanager.filesystem.FileUtil;
+import com.amaze.filemanager.filesystem.compressed.CompressedHelper;
+import com.amaze.filemanager.filesystem.compressed.extractcontents.Extractor;
 import com.amaze.filemanager.ui.notifications.NotificationConstants;
 import com.amaze.filemanager.utils.DatapointParcelable;
 import com.amaze.filemanager.utils.ObtainableServiceBinder;
@@ -197,14 +199,54 @@ public class ExtractService extends ProgressiveService {
                 boolean isTar = path.endsWith(".tar") || path.endsWith(".tar.gz");
                 boolean isRar = path.endsWith(".rar");
 
-                if (entriesToExtract != null && entriesToExtract.length != 0) {
-                    if (isZip) extract(extractService, f, extractionPath, entriesToExtract);
+                if(entriesToExtract.length == 0) entriesToExtract = null;
+
+                Extractor extractor =
+                        CompressedHelper.getExtractorInstance(extractService.getApplicationContext(),
+                                f, extractionPath, new Extractor.OnUpdate() {
+                                    private int sourceFilesProcessed = 0;
+
+                                    @Override
+                                    public void onStart(long totalBytes, String firstEntryName) {
+                                        // setting total bytes calculated from zip entries
+                                        progressHandler.setTotalSize(totalBytes);
+
+                                        extractService.addFirstDatapoint(firstEntryName,
+                                                1, totalBytes, false);
+
+                                        watcherUtil = new ServiceWatcherUtil(progressHandler, totalBytes);
+                                        watcherUtil.watch();
+                                    }
+
+                                    @Override
+                                    public void onUpdate(String entryPath) {
+                                        progressHandler.setFileName(entryPath);
+                                        if (entriesToExtract != null) {
+                                            progressHandler.setSourceFilesProcessed(sourceFilesProcessed++);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFinish() {
+                                        if (entriesToExtract == null){
+                                            progressHandler.setSourceFilesProcessed(1);
+                                        }
+                                    }
+
+                                    @Override
+                                    public boolean isCancelled() {
+                                        return progressHandler.getCancelled();
+                                    }
+                                });
+
+                if (entriesToExtract != null) {
+                    if (isZip) extractor.extractFiles(entriesToExtract);
                     else if (isRar) extractRar(extractService, f, extractionPath, entriesToExtract);
-                    else if (isTar) extractTar(extractService, f, extractionPath, entriesToExtract);
+                    else if (isTar) extractor.extractFiles(entriesToExtract);
                 } else {
-                    if (isZip) extract(extractService, f, extractionPath);
+                    if (isZip) extractor.extractEverything();
                     else if (isRar) extractRar(extractService, f, extractionPath);
-                    else if (isTar) extractTar(extractService, f, extractionPath);
+                    else if (isTar) extractor.extractEverything();
                 }
             } catch (IOException | RarException e) {
                 Log.e("amaze", "Error while extracting file " + compressedPath, e);

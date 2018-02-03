@@ -1,4 +1,4 @@
-package com.amaze.filemanager.filesystem.compressed.helpers;
+package com.amaze.filemanager.filesystem.compressed.showcontents.helpers;
 
 import android.content.Context;
 
@@ -9,14 +9,16 @@ import com.amaze.filemanager.utils.OnAsyncTaskFinished;
 
 import java.util.ArrayList;
 
+;
+
 /**
  * @author Emmanuel Messulam <emmanuelbendavid@gmail.com>
  *         on 2/12/2017, at 00:36.
  */
 
-public class TarDecompressor extends Decompressor {
+public class TarHelper extends Decompressor {
 
-    public TarDecompressor(Context context) {
+    public TarHelper(Context context) {
         super(context);
     }
 

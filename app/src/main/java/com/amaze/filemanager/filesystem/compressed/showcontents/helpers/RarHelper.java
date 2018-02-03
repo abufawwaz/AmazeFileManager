@@ -1,4 +1,4 @@
-package com.amaze.filemanager.filesystem.compressed.helpers;
+package com.amaze.filemanager.filesystem.compressed.showcontents.helpers;
 
 import android.content.Context;
 
@@ -15,9 +15,9 @@ import java.util.ArrayList;
  *         on 20/11/2017, at 17:23.
  */
 
-public class RarDecompressor extends Decompressor {
+public class RarHelper extends Decompressor {
 
-    public RarDecompressor(Context context) {
+    public RarHelper(Context context) {
         super(context);
     }
 
