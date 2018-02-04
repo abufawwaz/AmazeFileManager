@@ -61,8 +61,8 @@ public class CompressedHelper {
         return decompressor;
     }
 
-    public static boolean isFileExtractable(File file) {
-        String type = file.getPath().substring(file.getPath().lastIndexOf('.')+1, file.getPath().length()).toLowerCase();
+    public static boolean isFileExtractable(String path) {
+        String type = path.substring(path.lastIndexOf('.')+1, path.length()).toLowerCase();
 
         return isZip(type) || isTar(type) || isRar(type);
     }
@@ -72,7 +72,7 @@ public class CompressedHelper {
     }
 
     private static boolean isTar(String type) {
-         return type.endsWith("tar") || type.endsWith("tar.gz");
+         return type.endsWith("tar");
     }
 
     private static boolean isRar(String type) {
